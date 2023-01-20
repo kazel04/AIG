@@ -6,6 +6,8 @@ from Graph import *
 from Character import *
 from State import *
 
+from Utlis_TeamA import *
+
 class Archer_TeamA(Character):
 
     def __init__(self, world, image, projectile_image, base, position):
@@ -26,6 +28,8 @@ class Archer_TeamA(Character):
         self.min_target_distance = 100
         self.projectile_range = 100
         self.projectile_speed = 100
+        
+        self.dodge_distance = self.min_target_distance + 20
 
         seeking_state = ArcherStateSeeking_TeamA(self)
         attacking_state = ArcherStateAttacking_TeamA(self)
@@ -48,7 +52,7 @@ class Archer_TeamA(Character):
         
         # get all projectiles in the range
         self.projectiles = [v for (k,v) in self.world.entities.items() if issubclass(type(v), Projectile)
-            and v.team_id == 1 and (v.position - self.position).length() < self.min_target_distance ]
+            and v.team_id != self.team_id and (v.position - self.position).length() < self.dodge_distance]
         
         Character.process(self, time_passed)
         
@@ -64,7 +68,7 @@ class ArcherStateDodging_TeamA(State):
         State.__init__(self, "dodging")
         self.archer = archer
         self.starting_time = None
-        self.dodge_time = 0.3
+        self.dodge_time = 0.6 / SPEED_MULTIPLIER
         
     def do_actions(self):
         
@@ -84,6 +88,9 @@ class ArcherStateDodging_TeamA(State):
     
         if current_time - self.starting_time > self.dodge_time * 1000:
             return "seeking"
+        
+        if len(self.archer.projectiles) <= 0:
+            return "seeking"
     
     def entry_actions(self):
         self.starting_time = pygame.time.get_ticks()
@@ -95,9 +102,12 @@ class ArcherStateDodging_TeamA(State):
         
         predicted_pos_90deg = self.archer.position + cloest_projectile.velocity.rotate(90).normalize() * self.archer.maxSpeed * self.dodge_time
         
+        dummy_character = GameEntity(self.archer.world, "", pygame.image.load("assets/blue_archer_32_32.png").convert_alpha(), False)
+        dummy_character.rect = pygame.Rect(predicted_pos_90deg, (1, 1))
+                 
         if predicted_pos_90deg[0] < 0 or predicted_pos_90deg[0] > SCREEN_WIDTH or \
            predicted_pos_90deg[1] < 0 or predicted_pos_90deg[1] > SCREEN_HEIGHT or \
-            any([pygame.Rect.collidepoint(obstacle.rect, predicted_pos_90deg) for obstacle in self.archer.world.obstacles]):
+            len(pygame.sprite.spritecollide(dummy_character, self.archer.world.obstacles, False, pygame.sprite.collide_mask)) > 0:
             self.archer.velocity = cloest_projectile.velocity.rotate(-90)
         else:
             self.archer.velocity = cloest_projectile.velocity.rotate(90)
@@ -113,7 +123,7 @@ class ArcherStateSeeking_TeamA(State):
         State.__init__(self, "seeking")
         self.archer = archer
 
-        self.archer.path_graph = self.archer.world.paths[3]
+        self.archer.path_graph = self.archer.world.paths[3] #randint(0, len(self.archer.world.paths)-1)]
 
 
     def do_actions(self):
@@ -137,14 +147,15 @@ class ArcherStateSeeking_TeamA(State):
                 
             if self.archer.current_hp < self.archer.max_hp and \
                 opponent_distance > self.archer.healing_cooldown * self.archer.maxSpeed + self.archer.min_target_distance:
+                
                 self.archer.heal()
         
         if (self.archer.position - self.archer.move_target.position).length() < 8:
+
             # continue on path
             if self.current_connection < self.path_length:
                 self.archer.move_target.position = self.path[self.current_connection].toNode.position
                 self.current_connection += 1
-            
                 
                 
         if len(self.archer.projectiles) > 0:
@@ -159,32 +170,27 @@ class ArcherStateSeeking_TeamA(State):
         self.path = pathFindAStar(self.archer.path_graph, \
                                   nearest_node, \
                                   self.archer.path_graph.nodes[self.archer.base.target_node_index])
-
         
         self.path_length = len(self.path)
+        
+        print(self.archer.path_graph.nodes)
 
-        if (self.path_length > 0):
+        if self.path_length > 1:
+            
             # will not go back to node before continuing
             distance_from_node_to_base = (Vector2(self.path[0].fromNode.position) - Vector2(self.archer.base.position)).length()
-            distance_from_wizard_to_base = (Vector2(self.archer.position) - Vector2(self.archer.base.position)).length()
+            distance_from_archer_to_base = (Vector2(self.archer.position) - Vector2(self.archer.base.position)).length()
 
-            if (distance_from_wizard_to_base > distance_from_node_to_base and \
-                len(self.path) > 0):
-                
+            if distance_from_archer_to_base > distance_from_node_to_base and distance_from_node_to_base > 500: #so that it will not get stuck
                 self.path.pop(0)
                 self.path_length -= 1
-                        
-            if (self.path_length > 0):
-                self.current_connection = 0
-                self.archer.move_target.position = self.path[0].fromNode.position
+                
+            self.archer.move_target.position = self.path[0].fromNode.position
 
         else:
             self.archer.move_target.position = self.archer.path_graph.nodes[self.archer.base.target_node_index].position
-
-def is_opponent_in_range(character, opponent):
-    opponent_distance = (character.position - opponent.position).length()
-    if opponent_distance <= character.min_target_distance:
-        return opponent
+        
+        self.current_connection = 0
 
 class ArcherStateAttacking_TeamA(State):
 
@@ -208,10 +214,20 @@ class ArcherStateAttacking_TeamA(State):
             #move towards target
             self.archer.velocity = self.archer.target.position - self.archer.position
         elif opponent_distance - self.archer.min_target_distance < -5:
-            #move away from target
-            self.archer.velocity = self.archer.position - self.archer.target.position
+            #retreat to base
+            
+            if self.current_connection < self.path_length:
+                self.archer.velocity = self.archer.move_target.position - self.archer.position
+            else:
+                self.archer.velocity = self.archer.position - self.archer.target.position
         else:
             self.archer.velocity = Vector2(0, 0)
+            
+        if (self.archer.position - self.archer.move_target.position).length() < 32:
+            # continue on path
+            if self.current_connection < self.path_length:
+                self.archer.move_target.position = self.path[self.current_connection].toNode.position
+                self.current_connection += 1
 
         if self.archer.velocity.length() > 0:
             self.archer.velocity.normalize_ip();
@@ -232,7 +248,30 @@ class ArcherStateAttacking_TeamA(State):
 
     def entry_actions(self):
 
-        return None
+        nearest_node = self.archer.path_graph.get_nearest_node(self.archer.position)
+
+        self.path = pathFindAStar(self.archer.path_graph, \
+                                  nearest_node, \
+                                  self.archer.path_graph.nodes[self.archer.base.spawn_node_index])
+        
+        
+        self.path_length = len(self.path)
+
+        if (self.path_length > 1):
+            # will not go back to node before continuing
+            distance_from_node_to_base = (Vector2(self.path[0].fromNode.position) - Vector2(self.archer.base.position)).length()
+            distance_from_archer_to_base = (Vector2(self.archer.position) - Vector2(self.archer.base.position)).length()
+
+            if distance_from_archer_to_base < distance_from_node_to_base:
+                self.path.pop(0)
+                self.path_length -= 1
+                
+            self.archer.move_target.position = self.path[0].fromNode.position
+
+        else:
+            self.archer.move_target.position = self.archer.path_graph.nodes[self.archer.base.spawn_node_index].position
+
+        self.current_connection = 0
 
 
 class ArcherStateKO_TeamA(State):
@@ -253,7 +292,7 @@ class ArcherStateKO_TeamA(State):
         if self.archer.current_respawn_time <= 0:
             self.archer.current_respawn_time = self.archer.respawn_time
             self.archer.ko = False
-            self.archer.path_graph = self.archer.world.paths[randint(0, len(self.archer.world.paths)-1)]
+            #self.archer.path_graph = self.archer.world.paths[randint(0, len(self.archer.world.paths)-1)]
             return "seeking"
             
         return None

@@ -165,6 +165,10 @@ class World(object):
 
         red_score = font.render(TEAM_NAME[1] + " score = " + str(self.scores[1]), True, (255, 0, 0))
         surface.blit(red_score, (870 - red_score.get_size()[0], 730))
+        
+        for id, node in self.graph.nodes.items():
+            node_id = font.render(str(node.id), True, (0, 0, 255))
+            surface.blit(node_id, node.position)
 
         # draw the countdown timer
         timer = font.render(str("Time left = " + str(int(self.countdown_timer))), True, (255, 255, 255))

@@ -8,6 +8,8 @@ from State import *
 
 import numpy as np
 
+from Utlis_TeamA import *
+
 class Wizard_TeamA(Character):
 
     def __init__(self, world, image, projectile_image, base, position, explosion_image = None):
@@ -51,11 +53,6 @@ class Wizard_TeamA(Character):
             choice = 3 #randint(0, len(level_up_stats) - 1)
             self.level_up(level_up_stats[choice])      
 
-def is_opponent_in_range(character, opponent):
-    opponent_distance = (character.position - opponent.position).length()
-    if opponent_distance <= character.min_target_distance:
-        return opponent
-
 class WizardStateSeeking_TeamA(State):
 
     def __init__(self, wizard):
@@ -63,7 +60,7 @@ class WizardStateSeeking_TeamA(State):
         State.__init__(self, "seeking")
         self.wizard = wizard
 
-        self.wizard.path_graph = self.wizard.world.paths[3]
+        self.wizard.path_graph = self.wizard.world.paths[3] #self.wizard.world.paths[randint(0, len(self.wizard.world.paths)-1)]
         
 
     def do_actions(self):
@@ -109,25 +106,21 @@ class WizardStateSeeking_TeamA(State):
         
         self.path_length = len(self.path)
 
-        print(self.wizard.path_graph.nodes[self.wizard.base.target_node_index].position)
-
-        if (self.path_length > 0):
+        if (self.path_length > 1 and nearest_node != self.wizard.path_graph.nodes[self.wizard.base.target_node_index]):
             # will not go back to node before continuing
             distance_from_node_to_base = (Vector2(self.path[0].fromNode.position) - Vector2(self.wizard.base.position)).length()
             distance_from_wizard_to_base = (Vector2(self.wizard.position) - Vector2(self.wizard.base.position)).length()
 
-            if (distance_from_wizard_to_base > distance_from_node_to_base and \
-                len(self.path) > 0):
-
+            if distance_from_wizard_to_base > distance_from_node_to_base and distance_from_node_to_base > 200: #so that it will not get stuck
                 self.path.pop(0)
                 self.path_length -= 1
-                        
-            if (self.path_length > 0):
-                self.current_connection = 0
-                self.wizard.move_target.position = self.path[0].fromNode.position
+                
+            self.wizard.move_target.position = self.path[0].fromNode.position
 
         else:
             self.wizard.move_target.position = self.wizard.path_graph.nodes[self.wizard.base.target_node_index].position
+        
+        self.current_connection = 0
 
 
 class WizardStateAttacking_TeamA(State):
@@ -140,7 +133,9 @@ class WizardStateAttacking_TeamA(State):
     def do_actions(self):
 
         # get all targets in the range
-        targets = [v for (k,v) in self.wizard.world.entities.items() if issubclass(type(v), Character) and v.team_id == 1 and (v.position - self.wizard.position).length() < self.wizard.min_target_distance ]
+        targets = [v for (k,v) in self.wizard.world.entities.items() if issubclass(type(v), Character) \
+                   and v.team_id != self.wizard.team_id and v.team_id != 2 \
+                   and (v.position - self.wizard.position).length() < self.wizard.min_target_distance ]
         
         if len(targets) > 0:
         
@@ -158,10 +153,10 @@ class WizardStateAttacking_TeamA(State):
             if self.wizard.current_ranged_cooldown <= 0 and mean_position is not None:
                 self.wizard.ranged_attack(mean_position, self.wizard.explosion_image)
 
+
         nearest_opponent = self.wizard.world.get_nearest_opponent(self.wizard)
         if nearest_opponent is not None and is_opponent_in_range(self.wizard, nearest_opponent):
-            self.wizard.target = nearest_opponent
-            
+            self.wizard.target = nearest_opponent    
         
         opponent_distance = (self.wizard.position - self.wizard.target.position).length()
 
@@ -169,10 +164,20 @@ class WizardStateAttacking_TeamA(State):
             #move towards target
             self.wizard.velocity = self.wizard.target.position - self.wizard.position
         elif opponent_distance - self.wizard.min_target_distance * 0.5 < -5:
-            #move away from target
-            self.wizard.velocity = self.wizard.position - self.wizard.target.position
+            #retreat to base
+            
+            if self.current_connection < self.path_length:
+                self.wizard.velocity = self.wizard.move_target.position - self.wizard.position
+            else:
+                self.wizard.velocity = self.wizard.position - self.wizard.target.position
         else:
             self.wizard.velocity = Vector2(0, 0)
+            
+        if (self.wizard.position - self.wizard.move_target.position).length() < 24:
+            # continue on path
+            if self.current_connection < self.path_length:
+                self.wizard.move_target.position = self.path[self.current_connection].toNode.position
+                self.current_connection += 1
 
         if self.wizard.velocity.length() > 0:
             self.wizard.velocity.normalize_ip();
@@ -190,7 +195,30 @@ class WizardStateAttacking_TeamA(State):
 
     def entry_actions(self):
 
-        return None
+        nearest_node = self.wizard.path_graph.get_nearest_node(self.wizard.position)
+
+        self.path = pathFindAStar(self.wizard.path_graph, \
+                                  nearest_node, \
+                                  self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index])
+                
+        self.path_length = len(self.path)
+
+        if (self.path_length > 1):
+            # will not go back to node before continuing
+            distance_from_node_to_base = (Vector2(self.path[0].fromNode.position) - Vector2(self.wizard.base.position)).length()
+            distance_from_wizard_to_base = (Vector2(self.wizard.position) - Vector2(self.wizard.base.position)).length()
+
+            if distance_from_wizard_to_base < distance_from_node_to_base:
+                self.path.pop(0)
+                self.path_length -= 1
+                
+            self.wizard.move_target.position = self.path[0].fromNode.position
+
+        else:
+            self.wizard.move_target.position = self.wizard.path_graph.nodes[self.wizard.base.spawn_node_index].position
+
+        self.current_connection = 0
+
     
     def get_biggest_cluster(self, targets, perimeter_bound):
         centoid_distances = self.calculate_centoid_distance(targets)
@@ -277,7 +305,7 @@ class WizardStateKO_TeamA(State):
         if self.wizard.current_respawn_time <= 0:
             self.wizard.current_respawn_time = self.wizard.respawn_time
             self.wizard.ko = False
-            self.wizard.path_graph = self.wizard.world.paths[randint(0, len(self.wizard.world.paths)-1)]
+            #self.wizard.path_graph = self.wizard.world.paths[randint(0, len(self.wizard.world.paths)-1)]
             return "seeking"
             
         return None

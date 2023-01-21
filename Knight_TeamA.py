@@ -130,12 +130,12 @@ class KnightStateSeeking_TeamA(State):
                              return "attacking"
                          
         #heal if out of range of nearest opponent OR when health is low & lower than opponent
-                opponent_distance = (self.knight.position - nearest_opponent.position).length()
-                if self.knight.current_hp < self.knight.max_hp and \
-                    opponent_distance > self.knight.healing_cooldown * self.knight.maxSpeed + self.knight.min_target_distance:
-                    self.knight.heal()
-                elif self.knight.current_hp < self.knight.max_hp * 0 and self.knight.target.current_hp > self.knight.current_hp:
-                    self.knight.heal()
+        opponent_distance = (self.knight.position - nearest_opponent.position).length()
+        if self.knight.current_hp < self.knight.max_hp and \
+            opponent_distance > self.knight.healing_cooldown * self.knight.maxSpeed + self.knight.min_target_distance:
+            self.knight.heal()
+        elif self.knight.current_hp < self.knight.max_hp * 0 and nearest_opponent.current_hp > self.knight.current_hp:
+            self.knight.heal()
                 
         
         if (self.knight.position - self.knight.move_target.position).length() < 8:

@@ -326,8 +326,10 @@ class KnightStateDefending_TeamA(State):
          opponent_distance = (self.knight.position - nearest_opponent.position).length()
          if self.knight.current_hp < self.knight.max_hp and \
              opponent_distance > self.knight.healing_cooldown * self.knight.maxSpeed + self.knight.min_target_distance:
+             print("Heal")
              self.knight.heal()
-         elif self.knight.current_hp < self.knight.max_hp * 0 and nearest_opponent.current_hp > self.knight.current_hp:
+         elif self.knight.current_hp < self.knight.max_hp * 0.2 and nearest_opponent.current_hp > self.knight.current_hp:
+             print("Heal")
              self.knight.heal()
                  
          

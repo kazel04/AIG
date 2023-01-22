@@ -260,7 +260,7 @@ class KnightStateDefending_TeamA(State):
 
     def __init__(self, knight):
 
-        State.__init__(self, "seeking")
+        State.__init__(self, "defending")
         self.knight = knight
 
         self.knight.path_graph = self.knight.world.paths[3] #changed to middle lane

@@ -123,7 +123,7 @@ class ArcherStateSeeking_TeamA(State):
         State.__init__(self, "seeking")
         self.archer = archer
 
-        self.archer.path_graph = self.archer.world.paths[3] #randint(0, len(self.archer.world.paths)-1)]
+        self.archer.path_graph = self.archer.world.paths[randint(0, 1)] #randint(0, len(self.archer.world.paths)-1)]
 
 
     def do_actions(self):
@@ -292,7 +292,7 @@ class ArcherStateKO_TeamA(State):
         if self.archer.current_respawn_time <= 0:
             self.archer.current_respawn_time = self.archer.respawn_time
             self.archer.ko = False
-            #self.archer.path_graph = self.archer.world.paths[randint(0, len(self.archer.world.paths)-1)]
+            self.archer.path_graph = self.archer.world.paths[randint(0, 1)]
             return "seeking"
             
         return None

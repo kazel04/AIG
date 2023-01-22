@@ -58,7 +58,7 @@ class KnightStateSeeking_TeamA(State):
         State.__init__(self, "seeking")
         self.knight = knight
 
-        self.knight.path_graph = self.knight.world.paths[1] #changed to bott lane
+        self.knight.path_graph = self.knight.world.paths[3] #always attack mid first, then switch to bott
 
 
     def do_actions(self):
@@ -75,6 +75,8 @@ class KnightStateSeeking_TeamA(State):
         # check if opponent is in range TBD: ADD PRIORITY FOR THIS STATE(archer first, then wizard, then knight)
         nearest_opponent = self.knight.world.get_nearest_opponent(self.knight)
         print(nearest_opponent.name)
+        #add switch to defence state if the last tower is down
+        
         if nearest_opponent is not None:
             
             if nearest_opponent.name == "archer":
@@ -150,7 +152,24 @@ class KnightStateSeeking_TeamA(State):
 #                     #calculate halfway point between previous node & next node to form another shortcut
 #                      self.knight.move_target.position = (671,477)
 # =============================================================================
-            #alternate movement strategy (faster) + MUST INCLUDE ALT PATHS IF SENT TO TOP OR BOTT LANES
+            #alternate movement strategy (faster) + MUST INCLUDE ALT PATHS IF SENT TO TOP OR BOTT LANES, problem is the knight will draw fire from the middle tower and cause an initial death especially if engaged with an enemy hero
+# =============================================================================
+#                 if self.knight.position[0] < 345: #check if x-axis of unit is past first checkpoint
+#                     self.knight.move_target.position = (345, 290) # (900, 640)this node position forces the knight to always go centre, now need to program out the moving aside from the tower (nudging left or right till velo not zero?)
+#                     
+#                 elif self.knight.position[0] < 487:
+#                     self.knight.move_target.position = (487,545)
+#                     
+#                 elif self.knight.position[0] < 900:
+#                     #calculate halfway point between previous node & next node to form another shortcut
+#                      self.knight.move_target.position = (900,640)
+#                 else:
+#                     self.knight.move_target.position = self.path[self.current_connection].toNode.position
+#                     print(self.knight.move_target.position)
+#                 self.current_connection += 1
+# =============================================================================
+               
+            
              
         return None
 
@@ -227,7 +246,7 @@ class KnightStateKO_TeamA(State):
         if self.knight.current_respawn_time <= 0:
             self.knight.current_respawn_time = self.knight.respawn_time
             self.knight.ko = False
-            self.knight.path_graph = self.knight.world.paths[randint(0, len(self.knight.world.paths)-1)]
+            self.knight.path_graph = self.knight.world.paths[3]
             return "seeking"
             
         return None

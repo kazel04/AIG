@@ -3,15 +3,34 @@ from GameEntity import *
 
 import pygame
 
+import numpy as np
+
 def is_opponent_in_range(character, opponent):
     
-    mean_pos = (character.position + opponent.position) / 2
+    # x = [character.position.x, opponent.position.x]
+    # y = [character.position.y, opponent.position.y]
     
-    dummy_character = GameEntity(character.world, "", pygame.image.load("assets/blue_archer_32_32.png").convert_alpha(), False)
-    dummy_character.rect = pygame.Rect(mean_pos, (1, 1))
+    # equation = np.poly1d(np.polyfit(x, y, 1))
+    # x_axis = np.linspace(x[0], x[1], 10)
+    # y_axis = equation(x_axis)
+    
+    # is_position_in_obstacle = False
+    
+    # for i in range(len(x_axis)):
+    #     predicted_pos = Vector2(x_axis[i], y_axis[i])
+
+    #     dummy_character = GameEntity(character.world, "", pygame.image.load("assets/blue_archer_32_32.png").convert_alpha(), False)
+    #     dummy_character.rect = pygame.Rect(predicted_pos, (10, 10))
+        
+    #     if is_stuck(dummy_character):
+    #         is_position_in_obstacle = True
+    #         break
+    
+    # if character.name == "archer":
+    #     print(character.name + " " + str(is_position_in_obstacle))
     
     opponent_distance = (character.position - opponent.position).length()
-    if opponent_distance <= character.min_target_distance and not is_stuck(dummy_character):
+    if opponent_distance <= character.min_target_distance: #and not is_position_in_obstacle:
         return opponent
     
 def is_stuck(character):

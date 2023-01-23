@@ -73,6 +73,7 @@ class KnightStateSeeking_TeamA(State):
         nearest_opponent = self.knight.world.get_nearest_opponent(self.knight)
         #add switch to defence state if the last tower is down
         
+        #&also defend allied wizard
         if nearest_opponent is not None and nearest_opponent.team_id is not self.knight.team_id:
             if nearest_opponent.name == "archer":
                 opponent_distance = (self.knight.position - nearest_opponent.position).length()
@@ -207,12 +208,12 @@ class KnightStateAttacking_TeamA(State):
 
     def check_conditions(self):
 
-        # target is gone or if target is on a different lane from the Knight if target is a hero, 
+        # target is gone or if target is on a different lane from the Knight if target is a hero & not at either ends of the map where there are no mountains in between, 
         if self.knight.world.get(self.knight.target.id) is None or self.knight.target.ko:
             self.knight.target = None
             return "seeking"
-        elif (self.knight.target.name == "knight" or self.knight.target.name == "wizard" or self.knight.target.name == "archer")  and self.knight.target.path_graph is not self.knight.path_graph:
-            self.knight.target = None
+        elif (self.knight.target.name == "knight" or self.knight.target.name == "wizard" or self.knight.target.name == "archer")  and self.knight.target.path_graph is not self.knight.path_graph and (self.knight.position[0] < 345 or self.knight.position[0] > 671):
+            self.knight.target = self.knight.target.world.get_nearest_opponent(self.knight.target)
             return "seeking"
             
         return None
@@ -329,7 +330,7 @@ class KnightStateDefending_TeamA(State):
              opponent_distance > self.knight.healing_cooldown * self.knight.maxSpeed + self.knight.min_target_distance:
              print("Heal")
              self.knight.heal()
-         elif self.knight.current_hp < self.knight.max_hp * 0.2 and nearest_opponent.current_hp > self.knight.current_hp:
+         elif self.knight.current_hp < self.knight.max_hp * 0.2:
              print("Heal")
              self.knight.heal()
                  

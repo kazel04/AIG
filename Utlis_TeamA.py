@@ -15,7 +15,7 @@ def is_opponent_in_range(character, opponent):
     y_axis = equation(x_axis)
     
     is_position_in_obstacle = False
-    
+    # prevent character from attacking opponent through walls
     for i in range(len(x_axis)):
         predicted_pos = Vector2(x_axis[i], y_axis[i])
 

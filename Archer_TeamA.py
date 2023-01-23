@@ -34,11 +34,13 @@ class Archer_TeamA(Character):
         seeking_state = ArcherStateSeeking_TeamA(self)
         attacking_state = ArcherStateAttacking_TeamA(self)
         dodging_state = ArcherStateDodging_TeamA(self)
+        # unstuck_state = ArcherStateUnstuck_TeamA(self)
         ko_state = ArcherStateKO_TeamA(self)
 
         self.brain.add_state(seeking_state)
         self.brain.add_state(attacking_state)
         self.brain.add_state(dodging_state)
+        # self.brain.add_state(unstuck_state)
         self.brain.add_state(ko_state)
 
         self.brain.set_state("seeking")
@@ -62,6 +64,46 @@ class Archer_TeamA(Character):
             self.level_up(level_up_stats[choice])   
 
 
+# class ArcherStateUnstuck_TeamA(State):
+#     def __init__(self, archer):
+
+#         State.__init__(self, "unstuck")
+#         self.archer = archer
+#         self.starting_time = None
+#         self.move_time = 0.2 / SPEED_MULTIPLIER
+        
+#     def do_actions(self):
+#         if self.archer.current_ranged_cooldown <= 0 and self.archer.target is not None:
+#             self.archer.ranged_attack(self.archer.target.position)
+        
+#         if self.archer.velocity.length() > 0:
+#             self.archer.velocity.normalize_ip();
+#             self.archer.velocity *= self.archer.maxSpeed
+            
+#     def check_conditions(self):
+#         current_time = pygame.time.get_ticks()
+    
+#         if current_time - self.starting_time > self.move_time * 1000:
+#             return "seeking"
+    
+#     def entry_actions(self):
+        
+#         move_degree = randint(0, 360)
+        
+#         # dummy_character = GameEntity(self.archer.world, "", pygame.image.load("assets/blue_archer_32_32.png").convert_alpha(), False)
+        
+#         # while self.archer.velocity.length() > 0 and is_stuck(dummy_character):
+#         #     move_degree = randint(0, 360)
+            
+#         #     predicted_pos = self.archer.position + self.archer.velocity.rotate(move_degree).normalize() * self.archer.maxSpeed * self.move_time
+        
+#         #     dummy_character.rect = pygame.Rect(predicted_pos, (1, 1))
+    
+#         self.starting_time = pygame.time.get_ticks()
+        
+#         self.archer.velocity = Vector2(1, 0).rotate(move_degree)
+            
+
 class ArcherStateDodging_TeamA(State):
     def __init__(self, archer):
 
@@ -74,9 +116,6 @@ class ArcherStateDodging_TeamA(State):
         
         if self.archer.current_ranged_cooldown <= 0 and self.archer.target is not None:
             self.archer.ranged_attack(self.archer.target.position)
-        
-        if len(self.archer.projectiles) <= 0:
-            return
         
         if self.archer.velocity.length() > 0:
             self.archer.velocity.normalize_ip();
@@ -105,9 +144,7 @@ class ArcherStateDodging_TeamA(State):
         dummy_character = GameEntity(self.archer.world, "", pygame.image.load("assets/blue_archer_32_32.png").convert_alpha(), False)
         dummy_character.rect = pygame.Rect(predicted_pos_90deg, (1, 1))
                  
-        if predicted_pos_90deg[0] < 0 or predicted_pos_90deg[0] > SCREEN_WIDTH or \
-           predicted_pos_90deg[1] < 0 or predicted_pos_90deg[1] > SCREEN_HEIGHT or \
-            len(pygame.sprite.spritecollide(dummy_character, self.archer.world.obstacles, False, pygame.sprite.collide_mask)) > 0:
+        if is_stuck(dummy_character):
             self.archer.velocity = cloest_projectile.velocity.rotate(-90)
         else:
             self.archer.velocity = cloest_projectile.velocity.rotate(90)
@@ -127,14 +164,18 @@ class ArcherStateSeeking_TeamA(State):
 
 
     def do_actions(self):
-
+            
         self.archer.velocity = self.archer.move_target.position - self.archer.position
+        
         if self.archer.velocity.length() > 0:
             self.archer.velocity.normalize_ip();
             self.archer.velocity *= self.archer.maxSpeed
 
 
     def check_conditions(self):
+        
+        if len(self.archer.projectiles) > 0:
+            return "dodging"
 
         # check if opponent is in range
         nearest_opponent = self.archer.world.get_nearest_opponent(self.archer)
@@ -157,23 +198,21 @@ class ArcherStateSeeking_TeamA(State):
                 self.archer.move_target.position = self.path[self.current_connection].toNode.position
                 self.current_connection += 1
                 
-                
-        if len(self.archer.projectiles) > 0:
-            return "dodging"
+        
+        # if is_stuck(self.archer):
+        #     return "unstuck"
             
         return None
 
     def entry_actions(self):
 
         nearest_node = self.archer.path_graph.get_nearest_node(self.archer.position)
-
+        
         self.path = pathFindAStar(self.archer.path_graph, \
                                   nearest_node, \
                                   self.archer.path_graph.nodes[self.archer.base.target_node_index])
         
         self.path_length = len(self.path)
-        
-        print(self.archer.path_graph.nodes)
 
         if self.path_length > 1:
             
@@ -181,7 +220,7 @@ class ArcherStateSeeking_TeamA(State):
             distance_from_node_to_base = (Vector2(self.path[0].fromNode.position) - Vector2(self.archer.base.position)).length()
             distance_from_archer_to_base = (Vector2(self.archer.position) - Vector2(self.archer.base.position)).length()
 
-            if distance_from_archer_to_base > distance_from_node_to_base and distance_from_node_to_base > 500: #so that it will not get stuck
+            if distance_from_archer_to_base > distance_from_node_to_base:
                 self.path.pop(0)
                 self.path_length -= 1
                 
@@ -189,6 +228,8 @@ class ArcherStateSeeking_TeamA(State):
 
         else:
             self.archer.move_target.position = self.archer.path_graph.nodes[self.archer.base.target_node_index].position
+            
+        # print([x.fromNode.id for x in self.path])
         
         self.current_connection = 0
 
@@ -243,6 +284,9 @@ class ArcherStateAttacking_TeamA(State):
         
         if len(self.archer.projectiles) > 0:
             return "dodging"
+        
+        # if is_stuck(self.archer):
+        #     return "unstuck"
 
         return None
 

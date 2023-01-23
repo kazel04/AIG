@@ -501,6 +501,16 @@ def run():
                 quit()
 
             if pygame.mouse.get_pressed()[0]:
+                orc = Orc(world, red_orc_image, red_base, Vector2(pygame.mouse.get_pos()))
+                orc.brain.set_state("seeking")
+                orc.max_hp = 99999999
+                orc.maxSpeed = ORC_MAX_SPEED
+                orc.min_target_distance = ORC_MIN_TARGET_DISTANCE
+                orc.melee_damage = ORC_MELEE_DAMAGE
+                orc.melee_cooldown = ORC_MELEE_COOLDOWN
+                orc.current_hp = orc.max_hp
+                orc.team_id = 1
+                world.add_entity(orc)
                 print(pygame.mouse.get_pos())
 
         # check for end of game

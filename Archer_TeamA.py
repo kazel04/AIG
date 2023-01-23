@@ -18,6 +18,10 @@ class Archer_TeamA(Character):
         
         # all the incoming projectiles
         self.projectiles = []
+        
+        # keep track of all oppnents in the map
+        # (path graph id, [character, ...])
+        self.opponents = {}
 
         self.base = base
         self.position = position
@@ -52,6 +56,27 @@ class Archer_TeamA(Character):
 
     def process(self, time_passed):
         
+        opponents = [v for (k,v) in self.world.entities.items() if issubclass(type(v), Character) \
+                        and v.team_id != self.team_id and v.team_id != 2]
+        
+        self.opponents = {}
+        
+        for opponent in opponents:
+            if not hasattr(opponent, "path_graph"):
+                continue
+            
+            path_graph_index = self.world.paths.index(opponent.path_graph)
+            
+            if path_graph_index not in self.opponents:
+                self.opponents[path_graph_index] = 0
+                
+            self.opponents[path_graph_index] += 1
+            
+        path_graph_id = max(self.opponents, key=self.opponents.get)
+            
+        if path_graph_id == 0 or path_graph_id == 1:
+            self.path_graph = self.world.paths[path_graph_id]
+                    
         # get all projectiles in the range
         self.projectiles = [v for (k,v) in self.world.entities.items() if issubclass(type(v), Projectile)
             and v.team_id != self.team_id and (v.position - self.position).length() < self.dodge_distance]
@@ -73,8 +98,6 @@ class ArcherStateUnstuck_TeamA(State):
         self.move_time = 0.2 / SPEED_MULTIPLIER
         
     def do_actions(self):
-        if self.archer.current_ranged_cooldown <= 0 and self.archer.target is not None:
-            self.archer.ranged_attack(self.archer.target.position)
         
         if self.archer.velocity.length() > 0:
             self.archer.velocity.normalize_ip();
@@ -251,7 +274,7 @@ class ArcherStateAttacking_TeamA(State):
 
         opponent_distance = (self.archer.position - self.archer.target.position).length()
         
-        if opponent_distance - self.archer.min_target_distance > 5:
+        if opponent_distance - self.archer.min_target_distance > 10:
             #move towards target
             self.archer.velocity = self.archer.target.position - self.archer.position
         elif opponent_distance - self.archer.min_target_distance < -5:
@@ -282,7 +305,10 @@ class ArcherStateAttacking_TeamA(State):
             self.archer.target = None
             return "seeking"
         
-        if len(self.archer.projectiles) > 0:
+        nearest_opponent = self.archer.world.get_nearest_opponent(self.archer)
+        opponent_distance = (self.archer.position - nearest_opponent.position).length()
+        
+        if len(self.archer.projectiles) > 0 and opponent_distance > self.archer.min_target_distance * 0.5:
             return "dodging"
         
         # if is_stuck(self.archer):
@@ -336,7 +362,13 @@ class ArcherStateKO_TeamA(State):
         if self.archer.current_respawn_time <= 0:
             self.archer.current_respawn_time = self.archer.respawn_time
             self.archer.ko = False
-            self.archer.path_graph = self.archer.world.paths[randint(0, 1)]
+            
+            # path_graph_id = max(self.archer.opponents, key=self.archer.opponents.get)
+            
+            # if path_graph_id != 0 or path_graph_id != 1:
+            #     path_graph_id = randint(0, 1)
+            
+            # self.archer.path_graph = self.archer.world.paths[path_graph_id]
             return "seeking"
             
         return None

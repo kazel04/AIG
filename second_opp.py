@@ -20,7 +20,7 @@ def get_second_nearest_opponent(self, char):
     second_nearest_opponent = None
     distance = 0
 
-    for entity in self.entities.values():
+    for entity in self.world.entities.values():
 
         # neutral entity
         if entity.team_id == 2:

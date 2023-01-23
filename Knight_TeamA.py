@@ -4,7 +4,8 @@ from Graph import *
 
 from Character import *
 from State import *
-from Utlis_TeamA import *
+from second_opp import *
+
 
 class Knight_TeamA(Character):
 

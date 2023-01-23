@@ -4,6 +4,7 @@ from Graph import *
 
 from Character import *
 from State import *
+from Utlis_TeamA import *
 
 class Knight_TeamA(Character):
 
@@ -75,46 +76,49 @@ class KnightStateSeeking_TeamA(State):
         
         #&also defend allied wizard
         if nearest_opponent is not None and nearest_opponent.team_id is not self.knight.team_id:
-            if nearest_opponent.name == "archer":
-                opponent_distance = (self.knight.position - nearest_opponent.position).length()
-                if opponent_distance <= self.knight.min_target_distance:
-                        self.knight.target = nearest_opponent
-                        return "attacking"
-            elif nearest_opponent.name == "wizard":
-                second_nearest =  nearest_opponent.world.get_nearest_opponent(nearest_opponent) #checking if there is a wizard in the vicinity
-                if second_nearest.name == "archer":
-                    opponent_distance = (self.knight.position - second_nearest.position).length()
-                    if opponent_distance <= self.knight.min_target_distance:
-                            self.knight.target = second_nearest
-                            return "attacking"
-                else:
-                    opponent_distance = (self.knight.position - second_nearest.position).length()
+            if is_opponent_in_range(self.knight, nearest_opponent):
+                if nearest_opponent.name == "archer":
+                    opponent_distance = (self.knight.position - nearest_opponent.position).length()
                     if opponent_distance <= self.knight.min_target_distance:
                             self.knight.target = nearest_opponent
                             return "attacking"
-                     
-            elif nearest_opponent.name == "knight":
-                second_nearest =  nearest_opponent.world.get_nearest_opponent(nearest_opponent)
-                if second_nearest.name == "archer":
-                    opponent_distance = (self.knight.position - second_nearest.position).length()
-                    if opponent_distance <= self.knight.min_target_distance:
-                            self.knight.target = second_nearest
-                            return "attacking"
-                elif second_nearest.name == "wizard":
-                    opponent_distance = (self.knight.position - second_nearest.position).length()
-                    if opponent_distance <= self.knight.min_target_distance:
-                            self.knight.target = second_nearest
-                            return "attacking"
+                elif nearest_opponent.name == "wizard":
+                    second_nearest = self.knight.world.get_second_nearest_opponent(self.knight) #checking if there is a wizard in the vicinity
+                    if second_nearest is not None:
+                        if second_nearest.name == "archer" and is_opponent_in_range(self.knight, second_nearest):
+                            opponent_distance = (self.knight.position - second_nearest.position).length()
+                            if opponent_distance <= self.knight.min_target_distance:
+                                    self.knight.target = second_nearest
+                                    return "attacking"
+                        else:
+                            opponent_distance = (self.knight.position - second_nearest.position).length()
+                            if opponent_distance <= self.knight.min_target_distance:
+                                    self.knight.target = nearest_opponent
+                                    return "attacking"
+                         
+                elif nearest_opponent.name == "knight":
+                    second_nearest = self.knight.world.get_second_nearest_opponent(self.knight)
+                    if second_nearest is not None:
+                        if second_nearest.name == "archer" and is_opponent_in_range(self.knight, second_nearest):
+                            opponent_distance = (self.knight.position - second_nearest.position).length()
+                            if opponent_distance <= self.knight.min_target_distance:
+                                    self.knight.target = second_nearest
+                                    return "attacking"
+                        elif second_nearest.name == "wizard" and is_opponent_in_range(self.knight, second_nearest):
+                            opponent_distance = (self.knight.position - second_nearest.position).length()
+                            if opponent_distance <= self.knight.min_target_distance:
+                                    self.knight.target = second_nearest
+                                    return "attacking"
+                        else:
+                            opponent_distance = (self.knight.position - nearest_opponent.position).length()
+                            if opponent_distance <= self.knight.min_target_distance:
+                                    self.knight.target = nearest_opponent
+                                    return "attacking"
                 else:
                     opponent_distance = (self.knight.position - nearest_opponent.position).length()
                     if opponent_distance <= self.knight.min_target_distance:
                             self.knight.target = nearest_opponent
                             return "attacking"
-            else:
-                opponent_distance = (self.knight.position - nearest_opponent.position).length()
-                if opponent_distance <= self.knight.min_target_distance:
-                        self.knight.target = nearest_opponent
-                        return "attacking"
                          
         #heal if out of range of nearest opponent OR when health is low & lower than opponent
         opponent_distance = (self.knight.position - nearest_opponent.position).length()

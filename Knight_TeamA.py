@@ -174,9 +174,7 @@ class KnightStateSeeking_TeamA(State):
         self.path = pathFindAStar(self.knight.path_graph, \
                                   nearest_node, \
                                   self.knight.path_graph.nodes[self.knight.base.target_node_index])
- 
-
-        
+         
         self.path_length = len(self.path)
 
         if (self.path_length > 0):
@@ -209,8 +207,11 @@ class KnightStateAttacking_TeamA(State):
 
     def check_conditions(self):
 
-        # target is gone
+        # target is gone or if target is on a different lane from the Knight if target is a hero, 
         if self.knight.world.get(self.knight.target.id) is None or self.knight.target.ko:
+            self.knight.target = None
+            return "seeking"
+        elif (self.knight.target.name == "knight" or self.knight.target.name == "wizard" or self.knight.target.name == "archer")  and self.knight.target.path_graph is not self.knight.path_graph:
             self.knight.target = None
             return "seeking"
             

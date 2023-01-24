@@ -8,6 +8,8 @@ from State import *
 
 from Utlis_TeamA import *
 
+from Base import Base
+
 class Archer_TeamA(Character):
 
     def __init__(self, world, image, projectile_image, base, position):
@@ -72,10 +74,6 @@ class Archer_TeamA(Character):
                 
             self.opponents[path_graph_index] += 1
             
-        path_graph_id = max(self.opponents, key=self.opponents.get)
-            
-        if path_graph_id == 0 or path_graph_id == 1:
-            self.path_graph = self.world.paths[path_graph_id]
                     
         # get all projectiles in the range
         self.projectiles = [v for (k,v) in self.world.entities.items() if issubclass(type(v), Projectile)
@@ -267,12 +265,21 @@ class ArcherStateAttacking_TeamA(State):
         
         if self.archer.current_ranged_cooldown <= 0:
             self.archer.ranged_attack(self.archer.target.position)
-                    
+            
+        enemy_base = [entity for entity_id, entity in self.archer.world.entities.items() if issubclass(type(entity), Base) \
+            and entity.team_id != self.archer.team_id][0]
+        
+        distance_to_enemy_base = (self.archer.position - enemy_base.position).length() - 40
+
         nearest_opponent = self.archer.world.get_nearest_opponent(self.archer)
         if nearest_opponent is not None and is_opponent_in_range(self.archer, nearest_opponent):
             self.archer.target = nearest_opponent
 
         opponent_distance = (self.archer.position - self.archer.target.position).length()
+        
+        if distance_to_enemy_base < self.archer.min_target_distance and opponent_distance > self.archer.min_target_distance * 0.4:
+            self.archer.target = enemy_base
+            opponent_distance = distance_to_enemy_base
         
         if opponent_distance - self.archer.min_target_distance > 10:
             #move towards target
@@ -363,12 +370,12 @@ class ArcherStateKO_TeamA(State):
             self.archer.current_respawn_time = self.archer.respawn_time
             self.archer.ko = False
             
-            # path_graph_id = max(self.archer.opponents, key=self.archer.opponents.get)
+            path_graph_id = max(self.archer.opponents, key=self.archer.opponents.get)
             
-            # if path_graph_id != 0 or path_graph_id != 1:
-            #     path_graph_id = randint(0, 1)
+            if path_graph_id != 0 or path_graph_id != 1:
+                path_graph_id = randint(0, 1)
             
-            # self.archer.path_graph = self.archer.world.paths[path_graph_id]
+            self.archer.path_graph = self.archer.world.paths[path_graph_id]
             return "seeking"
             
         return None

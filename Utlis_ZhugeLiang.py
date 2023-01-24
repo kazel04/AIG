@@ -1,6 +1,5 @@
 from Globals import *
 from GameEntity import *
-from HAL import *
 
 import pygame
 

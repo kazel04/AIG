@@ -11,7 +11,7 @@ def is_opponent_in_range(character, opponent):
     y = [character.position.y, opponent.position.y]
     
     equation = np.poly1d(np.polyfit(x, y, 1))
-    x_axis = np.linspace(x[0], x[1], 30)
+    x_axis = np.linspace(x[0], x[1], 10)
     y_axis = equation(x_axis)
     
     is_position_in_obstacle = False
@@ -30,7 +30,7 @@ def is_opponent_in_range(character, opponent):
     #     print(character.name + " " + str(is_position_in_obstacle))
     
     opponent_distance = (character.position - opponent.position).length()
-    if opponent_distance <= character.min_target_distance: #and not is_position_in_obstacle:
+    if opponent_distance <= character.min_target_distance and not is_position_in_obstacle:
         return opponent
     
 def is_stuck(character):

@@ -21,9 +21,11 @@ class Archer_TeamA(Character):
         # all the incoming projectiles
         self.projectiles = []
         
-        # keep track of all oppnents in the map
-        # (path graph id, [character, ...])
+        # keep track of opponent count in the map
+        # (path graph id, count)
         self.opponents = {}
+
+        self.dodge_distance = self.min_target_distance + 20
 
         self.base = base
         self.position = position
@@ -35,8 +37,6 @@ class Archer_TeamA(Character):
         self.projectile_range = 100
         self.projectile_speed = 100
         
-        self.dodge_distance = self.min_target_distance + 20
-
         seeking_state = ArcherStateSeeking_TeamA(self)
         attacking_state = ArcherStateAttacking_TeamA(self)
         dodging_state = ArcherStateDodging_TeamA(self)
@@ -73,8 +73,9 @@ class Archer_TeamA(Character):
                 self.opponents[path_graph_index] = 0
                 
             self.opponents[path_graph_index] += 1
-            
-                    
+        
+        self.dodge_distance = self.min_target_distance + 20
+        
         # get all projectiles in the range
         self.projectiles = [v for (k,v) in self.world.entities.items() if issubclass(type(v), Projectile)
             and v.team_id != self.team_id and (v.position - self.position).length() < self.dodge_distance]
@@ -318,8 +319,8 @@ class ArcherStateAttacking_TeamA(State):
         if len(self.archer.projectiles) > 0 and opponent_distance > self.archer.min_target_distance * 0.5:
             return "dodging"
         
-        # if is_stuck(self.archer):
-        #     return "unstuck"
+        if is_stuck(self.archer):
+            return "unstuck"
 
         return None
 

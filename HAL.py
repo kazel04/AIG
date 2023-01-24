@@ -16,9 +16,9 @@ from Orc import *
 from Tower import *
 from Base import *
 
-from Knight_TeamA import *
-from Archer_TeamA import *
-from Wizard_TeamA import *
+from Knight_ZhugeLiang import *
+from Archer_ZhugeLiang import *
+from Wizard_ZhugeLiang import *
 
 from Knight_TeamB import *
 from Archer_TeamB import *
@@ -356,7 +356,7 @@ def run():
     blue_tower_2.brain.set_state("tower_state")
     world.add_entity(blue_tower_2)
 
-    blue_knight = Knight_TeamA(world, blue_knight_image, blue_base, Vector2(blue_base.spawn_position))
+    blue_knight = Knight_ZhugeLiang(world, blue_knight_image, blue_base, Vector2(blue_base.spawn_position))
     blue_knight.team_id = 0
     blue_knight.max_hp = KNIGHT_MAX_HP
     blue_knight.maxSpeed = KNIGHT_MAX_SPEED
@@ -366,7 +366,7 @@ def run():
     blue_knight.current_hp = blue_knight.max_hp
     world.add_entity(blue_knight)
 
-    blue_archer = Archer_TeamA(world, blue_archer_image, blue_arrow_image, blue_base, Vector2(blue_base.spawn_position))
+    blue_archer = Archer_ZhugeLiang(world, blue_archer_image, blue_arrow_image, blue_base, Vector2(blue_base.spawn_position))
     blue_archer.team_id = 0
     blue_archer.max_hp = ARCHER_MAX_HP
     blue_archer.maxSpeed = ARCHER_MAX_SPEED
@@ -378,7 +378,7 @@ def run():
     blue_archer.current_hp = blue_archer.max_hp
     world.add_entity(blue_archer)
 
-    blue_wizard = Wizard_TeamA(world, blue_wizard_image, blue_rock_image, blue_base, Vector2(blue_base.spawn_position), blue_explosion_image)
+    blue_wizard = Wizard_ZhugeLiang(world, blue_wizard_image, blue_rock_image, blue_base, Vector2(blue_base.spawn_position), blue_explosion_image)
     blue_wizard.team_id = 0
     blue_wizard.max_hp = WIZARD_MAX_HP
     blue_wizard.maxSpeed = WIZARD_MAX_SPEED

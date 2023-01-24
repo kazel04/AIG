@@ -6,11 +6,11 @@ from Graph import *
 from Character import *
 from State import *
 
-from Utlis_TeamA import *
+from Utlis_ZhugeLiang import *
 
 from Base import Base
 
-class Archer_TeamA(Character):
+class Archer_ZhugeLiang(Character):
 
     def __init__(self, world, image, projectile_image, base, position):
 
@@ -37,11 +37,11 @@ class Archer_TeamA(Character):
         self.projectile_range = 100
         self.projectile_speed = 100
         
-        seeking_state = ArcherStateSeeking_TeamA(self)
-        attacking_state = ArcherStateAttacking_TeamA(self)
-        dodging_state = ArcherStateDodging_TeamA(self)
-        unstuck_state = ArcherStateUnstuck_TeamA(self)
-        ko_state = ArcherStateKO_TeamA(self)
+        seeking_state = ArcherStateSeeking_ZhugeLiang(self)
+        attacking_state = ArcherStateAttacking_ZhugeLiang(self)
+        dodging_state = ArcherStateDodging_ZhugeLiang(self)
+        unstuck_state = ArcherStateUnstuck_ZhugeLiang(self)
+        ko_state = ArcherStateKO_ZhugeLiang(self)
 
         self.brain.add_state(seeking_state)
         self.brain.add_state(attacking_state)
@@ -88,7 +88,7 @@ class Archer_TeamA(Character):
             self.level_up(level_up_stats[choice])   
 
 
-class ArcherStateUnstuck_TeamA(State):
+class ArcherStateUnstuck_ZhugeLiang(State):
     def __init__(self, archer):
 
         State.__init__(self, "unstuck")
@@ -126,7 +126,7 @@ class ArcherStateUnstuck_TeamA(State):
         self.archer.velocity = Vector2(1, 0).rotate(move_degree)
             
 
-class ArcherStateDodging_TeamA(State):
+class ArcherStateDodging_ZhugeLiang(State):
     def __init__(self, archer):
 
         State.__init__(self, "dodging")
@@ -175,7 +175,7 @@ class ArcherStateDodging_TeamA(State):
             self.archer.velocity.normalize_ip();
             self.archer.velocity *= self.archer.maxSpeed
 
-class ArcherStateSeeking_TeamA(State):
+class ArcherStateSeeking_ZhugeLiang(State):
 
     def __init__(self, archer):
 
@@ -255,7 +255,7 @@ class ArcherStateSeeking_TeamA(State):
         
         self.current_connection = 0
 
-class ArcherStateAttacking_TeamA(State):
+class ArcherStateAttacking_ZhugeLiang(State):
 
     def __init__(self, archer):
 
@@ -352,7 +352,7 @@ class ArcherStateAttacking_TeamA(State):
         self.current_connection = 0
 
 
-class ArcherStateKO_TeamA(State):
+class ArcherStateKO_ZhugeLiang(State):
 
     def __init__(self, archer):
 

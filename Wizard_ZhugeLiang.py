@@ -8,9 +8,9 @@ from State import *
 
 import numpy as np
 
-from Utlis_TeamA import *
+from Utlis_ZhugeLiang import *
 
-class Wizard_TeamA(Character):
+class Wizard_ZhugeLiang(Character):
 
     def __init__(self, world, image, projectile_image, base, position, explosion_image = None):
 
@@ -29,9 +29,9 @@ class Wizard_TeamA(Character):
         self.projectile_range = 100
         self.projectile_speed = 100
 
-        seeking_state = WizardStateSeeking_TeamA(self)
-        attacking_state = WizardStateAttacking_TeamA(self)
-        ko_state = WizardStateKO_TeamA(self)
+        seeking_state = WizardStateSeeking_ZhugeLiang(self)
+        attacking_state = WizardStateAttacking_ZhugeLiang(self)
+        ko_state = WizardStateKO_ZhugeLiang(self)
 
         self.brain.add_state(seeking_state)
         self.brain.add_state(attacking_state)
@@ -53,7 +53,7 @@ class Wizard_TeamA(Character):
             choice = 3 #randint(0, len(level_up_stats) - 1)
             self.level_up(level_up_stats[choice])      
 
-class WizardStateSeeking_TeamA(State):
+class WizardStateSeeking_ZhugeLiang(State):
 
     def __init__(self, wizard):
 
@@ -123,7 +123,7 @@ class WizardStateSeeking_TeamA(State):
         self.current_connection = 0
 
 
-class WizardStateAttacking_TeamA(State):
+class WizardStateAttacking_ZhugeLiang(State):
 
     def __init__(self, wizard):
 
@@ -289,7 +289,7 @@ class WizardStateAttacking_TeamA(State):
         return (max_x_character, max_y_character)
 
 
-class WizardStateKO_TeamA(State):
+class WizardStateKO_ZhugeLiang(State):
 
     def __init__(self, wizard):
 

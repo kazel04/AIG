@@ -160,7 +160,7 @@ class WizardStateAttacking_TeamA(State):
         
         opponent_distance = (self.wizard.position - self.wizard.target.position).length()
 
-        comfort_radius = self.wizard.min_target_distance * 0.7
+        comfort_radius = self.wizard.min_target_distance * 0.8
 
         if opponent_distance - comfort_radius > 5:
             #move towards target

@@ -249,8 +249,8 @@ class KnightStateKO_TeamA(State):
             self.knight.current_respawn_time = self.knight.respawn_time
             self.knight.ko = False
             self.knight.path_graph = self.knight.world.paths[3]
-            if self.knight.base.current_hp < self.knight.base.max_hp/2: #if base is less than half health, knight will return back to base to protect
-                return "defending"
+            #if self.knight.base.current_hp < self.knight.base.max_hp/2: #if base is less than half health, knight will return back to base to protect
+                #return "defending"
             return "seeking"
             
         return None
@@ -345,7 +345,8 @@ class KnightStateDefending_TeamA(State):
          
          if (self.knight.position - self.knight.move_target.position).length() < 8:
              if self.current_connection < self.path_length:
-                 self.knight.move_target.position = self.path[self.current_connection].toNode.position
+                 if self.knight.move_target.position[0] > 50:
+                     self.knight.move_target.position = (150,50)
                  self.current_connection += 1
                
     def entry_actions(self):

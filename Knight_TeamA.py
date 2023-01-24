@@ -57,7 +57,7 @@ class KnightStateSeeking_TeamA(State):
         State.__init__(self, "seeking")
         self.knight = knight
 
-        self.knight.path_graph = self.knight.world.paths[3] #always attack mid first, then switch to bott
+        self.knight.path_graph = self.knight.world.paths[randint(2,3)] #always attack mid first, then switch to bott
 
 
     def do_actions(self):
@@ -248,7 +248,7 @@ class KnightStateKO_TeamA(State):
         if self.knight.current_respawn_time <= 0:
             self.knight.current_respawn_time = self.knight.respawn_time
             self.knight.ko = False
-            self.knight.path_graph = self.knight.world.paths[3]
+            self.knight.path_graph = self.knight.world.paths[randint(2,3)]
             #if self.knight.base.current_hp < self.knight.base.max_hp/2: #if base is less than half health, knight will return back to base to protect
                 #return "defending"
             return "seeking"
@@ -272,7 +272,7 @@ class KnightStateDefending_TeamA(State):
         State.__init__(self, "defending")
         self.knight = knight
 
-        self.knight.path_graph = self.knight.world.paths[3] #changed to middle lane
+        self.knight.path_graph = self.knight.world.paths[randint(2,3)] #changed to middle lane
         
     def do_actions(self):
 

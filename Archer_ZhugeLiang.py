@@ -20,10 +20,6 @@ class Archer_ZhugeLiang(Character):
         
         # all the incoming projectiles
         self.projectiles = []
-        
-        # keep track of opponent count in the map
-        # (path graph id, count)
-        self.opponents = {}
 
         self.dodge_distance = self.min_target_distance + 20
 
@@ -58,21 +54,13 @@ class Archer_ZhugeLiang(Character):
 
     def process(self, time_passed):
         
-        opponents = [v for (k,v) in self.world.entities.items() if issubclass(type(v), Character) \
-                        and v.team_id != self.team_id and v.team_id != 2]
-        
-        self.opponents = {}
-        
-        for opponent in opponents:
-            if not hasattr(opponent, "path_graph"):
-                continue
+        wizard = [v for (k,v) in self.world.entities.items() if v.name == "wizard" \
+                    and v.team_id != self.team_id and v.team_id != 2][0]
             
-            path_graph_index = self.world.paths.index(opponent.path_graph)
-            
-            if path_graph_index not in self.opponents:
-                self.opponents[path_graph_index] = 0
-                
-            self.opponents[path_graph_index] += 1
+        path_graph_id = self.world.paths.index(wizard.path_graph)
+        
+        if path_graph_id == 0 or path_graph_id == 1:
+            self.path_graph = self.world.paths[path_graph_id]
         
         self.dodge_distance = self.min_target_distance + 20
         
@@ -319,8 +307,8 @@ class ArcherStateAttacking_ZhugeLiang(State):
         if len(self.archer.projectiles) > 0 and opponent_distance > self.archer.min_target_distance * 0.5:
             return "dodging"
         
-        if is_stuck(self.archer):
-            return "unstuck"
+        # if is_stuck(self.archer):
+        #     return "unstuck"
 
         return None
 
@@ -371,7 +359,28 @@ class ArcherStateKO_ZhugeLiang(State):
             self.archer.current_respawn_time = self.archer.respawn_time
             self.archer.ko = False
             
-            path_graph_id = max(self.archer.opponents, key=self.archer.opponents.get)
+            wizard = [v for (k,v) in self.archer.world.entities.items() if v.name == "wizard" \
+                        and v.team_id != self.archer.team_id and v.team_id != 2][0]
+            
+            # opponents = [v for (k,v) in self.archer.world.entities.items() if issubclass(type(v), Character) \
+            #             and v.team_id != self.archer.team_id and v.team_id != 2]
+        
+            # opponents_lane_count = {}
+            
+            # for opponent in opponents:
+            #     if not hasattr(opponent, "path_graph"):
+            #         continue
+                
+            #     path_graph_index = self.archer.world.paths.index(opponent.path_graph)
+                
+            #     if path_graph_index not in opponents:
+            #         opponents_lane_count[path_graph_index] = 0
+                    
+            #     opponents_lane_count[path_graph_index] += 1
+            
+            # path_graph_id = max(opponents_lane_count, key=opponents_lane_count.get)
+            
+            path_graph_id = self.archer.world.paths.index(wizard.path_graph)
             
             if path_graph_id != 0 or path_graph_id != 1:
                 path_graph_id = randint(0, 1)

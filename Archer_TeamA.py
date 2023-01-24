@@ -278,7 +278,7 @@ class ArcherStateAttacking_TeamA(State):
 
         opponent_distance = (self.archer.position - self.archer.target.position).length()
         
-        if distance_to_enemy_base < self.archer.min_target_distance and opponent_distance > self.archer.min_target_distance * 0.4:
+        if distance_to_enemy_base < self.archer.min_target_distance and opponent_distance > self.archer.min_target_distance * 0.5:
             self.archer.target = enemy_base
             opponent_distance = distance_to_enemy_base
         

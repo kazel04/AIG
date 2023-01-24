@@ -4,7 +4,6 @@ from Graph import *
 
 from Character import *
 from State import *
-from second_opp import *
 
 
 class Knight_ZhugeLiang(Character):
